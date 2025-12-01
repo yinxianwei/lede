@@ -54,8 +54,9 @@ jobs:
       # feeds
       - name: Update & install feeds
         run: |
+          echo "src-git openclash https://github.com/vernesong/OpenClash.git;master" >> feeds.conf.default
           ./scripts/feeds update -a
-          ./scripts/feeds install -a
+          ./scripts/feeds install -a -p openclash
 
       # 使用仓库根目录的 .config
       - name: Load .config
