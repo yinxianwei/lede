@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      # 拉代码
+      # 拉取你当前仓库（yinxianwei/lede）
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
@@ -23,21 +23,21 @@ jobs:
           sudo rm -rf /usr/local/share/boost
           df -h
 
-      # 🔥 **ccache 缓存（强烈推荐）**
+      # 🔥 ccache 缓存，加速重编译
       - name: Cache ccache
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ${{ runner.os }}-openwrt-ccache
+          key: ${{ runner.os }}-lede-ccache
           restore-keys: |
-            ${{ runner.os }}-openwrt-
+            ${{ runner.os }}-lede-
 
-      # 🔥 **dl 源码包缓存（大量加速下载）**
-      - name: Cache OpenWrt dl
+      # 🔥 dl 缓存（非常关键）
+      - name: Cache dl folder
         uses: actions/cache@v4
         with:
-          path: openwrt/dl
-          key: ${{ runner.os }}-openwrt-dl
+          path: dl
+          key: ${{ runner.os }}-lede-dl
 
       # 安装依赖
       - name: Install build deps
@@ -51,29 +51,21 @@ jobs:
                 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion \
                 swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
 
-      # Clone LEDE
-      - name: Clone LEDE source
-        run: |
-          git clone https://github.com/yinxianwei/lede openwrt
-
       # feeds
       - name: Update & install feeds
         run: |
-          cd openwrt
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      # config
-      - name: Copy custom config
+      # 使用仓库根目录的 .config
+      - name: Load .config
         run: |
-          cd openwrt
-          cp ../.config .config
+          cp .config .config.bak   # 备份一下
           make defconfig
 
       # 编译
       - name: Build firmware
         run: |
-          cd openwrt
           make -j$(nproc) || make -j1 V=s
 
       # 上传固件
@@ -81,4 +73,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DIR-882-A1-firmware
-          path: openwrt/bin/targets/
+          path: bin/targets/
