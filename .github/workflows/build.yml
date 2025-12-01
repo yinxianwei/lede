@@ -8,11 +8,13 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      # 拉代码
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # 释放空间
       - name: Free up disk space
         run: |
           sudo rm -rf /usr/share/dotnet
@@ -21,6 +23,23 @@ jobs:
           sudo rm -rf /usr/local/share/boost
           df -h
 
+      # 🔥 **ccache 缓存（强烈推荐）**
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-openwrt-ccache
+          restore-keys: |
+            ${{ runner.os }}-openwrt-
+
+      # 🔥 **dl 源码包缓存（大量加速下载）**
+      - name: Cache OpenWrt dl
+        uses: actions/cache@v4
+        with:
+          path: openwrt/dl
+          key: ${{ runner.os }}-openwrt-dl
+
+      # 安装依赖
       - name: Install build deps
         run: |
           sudo apt update
@@ -32,27 +51,32 @@ jobs:
                 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion \
                 swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
 
+      # Clone LEDE
       - name: Clone LEDE source
         run: |
           git clone https://github.com/coolsnowwolf/lede openwrt
 
+      # feeds
       - name: Update & install feeds
         run: |
           cd openwrt
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      # config
       - name: Copy custom config
         run: |
           cd openwrt
           cp ../.config .config
           make defconfig
 
+      # 编译
       - name: Build firmware
         run: |
           cd openwrt
           make -j$(nproc) || make -j1 V=s
 
+      # 上传固件
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
