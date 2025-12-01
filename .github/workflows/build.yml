@@ -54,14 +54,14 @@ jobs:
       # feeds
       - name: Update & install feeds
         run: |
-          echo "src-git openclash https://github.com/vernesong/OpenClash.git;master" >> feeds.conf.default
+          git clone https://github.com/vernesong/OpenClash.git
+          mv OpenClash/luci-app-openclash package
           ./scripts/feeds update -a
           ./scripts/feeds install -a -p openclash
 
       # 使用仓库根目录的 .config
       - name: Load .config
         run: |
-          cp .config .config.bak   # 备份一下
           make defconfig
 
       # 编译
