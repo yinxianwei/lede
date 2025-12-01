@@ -54,7 +54,7 @@ jobs:
       # Clone LEDE
       - name: Clone LEDE source
         run: |
-          git clone https://github.com/coolsnowwolf/lede openwrt
+          git clone https://github.com/yinxianwei/lede openwrt
 
       # feeds
       - name: Update & install feeds
